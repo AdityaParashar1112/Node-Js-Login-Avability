@@ -29,6 +29,7 @@ app.use(express.json());
 app.use('/api/v1/auth',authRoute)
 app.use('/api/v1',userRestro)
 app.use('/api/v1',emailRouter);
+
 //Server Listen and Port
 
 const PORT = process.env.PORT || 5000;

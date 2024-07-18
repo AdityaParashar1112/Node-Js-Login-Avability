@@ -2,7 +2,8 @@ const userModel = require("../models/userModel");
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const nodeMailer = require('nodemailer');
-
+const sessionModel = require("../models/sessionModel");
+const dotenv = require('dotenv');
 
 const userCreated = async (req, res) => {
     try {
@@ -121,11 +122,24 @@ const userLogin = async (req, res) => {
                
            });
          }
-
+     
+          
          const token = await jwt.sign({id:user._id},process.env.SECRET_TOKEN ,{
             expiresIn: '7d'
            })
 
+           const  activeCounts   = await sessionModel.countDocuments({user:user._id});
+           console.log(activeCounts);
+           
+         
+            if(activeCounts>2){
+                return res.send({
+                    success: 'true',
+                    message: 'You Are alreasy login in 3 Screens logout from one of them ',
+                    
+                });
+            }
+            await sessionModel.create({user:user._id,token:token})
 
         // Add your login logic here
         // For now, just return a success message
@@ -144,4 +158,25 @@ const userLogin = async (req, res) => {
     }
 };
 
-module.exports = { userLogin, userCreated };
+const userLogout = async(req,res)=>{
+      const userid = req.body.UserId;
+      console.log(userid);
+      const activeSession = await sessionModel.countDocuments({user:userid});
+     
+      for(var i=0;i<activeSession;i++){
+        await sessionModel.deleteOne({user:userid})
+      }
+     
+      
+      res.send({
+        staus:200,
+        message:'Delete Succesfully'
+      })
+}
+
+
+
+
+
+
+module.exports = { userLogin, userCreated , userLogout};
